@@ -5,8 +5,11 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Criar estrutura Android se nao existir
-        script: flutter create . --platforms=android --org com.boticario.app
+      - name: Inicializar projeto Android
+        script: |
+          if [ ! -d "android" ]; then
+            flutter create . --platforms=android --org com.boticario.app
+          fi
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK
