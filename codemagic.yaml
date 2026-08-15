@@ -4,9 +4,11 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Limpar e recriar estrutura Android moderna
+        script: flutter create . --platforms=android --org com.boticario.app
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK Release
-        script: flutter build apk --release --target-platform android-arm,android-arm64
+        script: flutter build apk --release
     artifacts:
       - build/**/outputs/**/*.apk
