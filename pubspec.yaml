@@ -1,18 +1,7 @@
-name: boticario_app
-description: "App de Controle de Pedidos Boticario"
-publish_to: 'none'
-version: 1.0.0+1
-
-environment:
-  sdk: '>=3.0.0 <4.0.0'
-
 dependencies:
   flutter:
     sdk: flutter
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-flutter:
-  uses-material-design: true
+  # Adicione as novas linhas aqui embaixo:
+  google_maps_flutter: ^2.5.0
+  geolocator: ^10.1.0
+  provider: ^6.0.0
