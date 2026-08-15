@@ -10,6 +10,9 @@ workflows:
       - name: Limpar build anterior
         script: |
           flutter clean
+      - name: Garantir configuracao moderna do Android
+        script: |
+          flutter create . --org com.marketplace.pro --platforms android
       - name: Instalar dependencias do projeto
         script: |
           flutter pub get
