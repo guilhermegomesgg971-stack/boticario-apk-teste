@@ -1,7 +1,9 @@
+environment:
+  sdk: '^3.13.0'
+
 dependencies:
   flutter:
     sdk: flutter
-  # Adicione as novas linhas aqui embaixo:
   google_maps_flutter: ^2.5.0
   geolocator: ^10.1.0
   provider: ^6.0.0
