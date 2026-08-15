@@ -1,15 +1,10 @@
 workflows:
   build-android-apk:
-    name: Gerar APK Android Direto
+    name: Gerar APK Android
     max_build_timeout: 30
     environment:
       flutter: stable
     scripts:
-      - name: Inicializar projeto Android
-        script: |
-          if [ ! -d "android" ]; then
-            flutter create . --platforms=android --org com.boticario.app
-          fi
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK
