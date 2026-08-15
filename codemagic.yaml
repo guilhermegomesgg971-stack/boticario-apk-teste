@@ -4,8 +4,10 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Atualizar arquivos do Android para versao moderna
-        script: flutter create . --platforms=android --org com.boticario.app --overwrite
+      - name: Recriar projeto limpo com estrutura moderna
+        script: |
+          rm -rf android ios web linux macos windows
+          flutter create . --platforms=android --org com.boticario.app
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK Release
