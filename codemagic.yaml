@@ -7,6 +7,6 @@ workflows:
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK Release
-        script: flutter build apk --release
+        script: flutter build apk --release --target-platform android-arm,android-arm64
     artifacts:
       - build/**/outputs/**/*.apk
