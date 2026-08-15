@@ -4,8 +4,8 @@ workflows:
     environment:
       flutter: stable
     scripts:
-      - name: Limpar e recriar estrutura Android moderna
-        script: flutter create . --platforms=android --org com.boticario.app
+      - name: Atualizar arquivos do Android para versao moderna
+        script: flutter create . --platforms=android --org com.boticario.app --overwrite
       - name: Instalar dependencias
         script: flutter pub get
       - name: Construir APK Release
