@@ -1,7 +1,6 @@
 workflows:
   build-android-apk:
     name: Gerar APK Android
-    max_build_timeout: 30
     environment:
       flutter: stable
     scripts:
