@@ -1,16 +1,20 @@
 workflows:
   build-android-apk:
     name: Gerar APK Android
+    max_build_duration: 30
     environment:
       flutter: stable
+      xcode: latest
+      cocoapods: default
     scripts:
-      - name: Recriar projeto limpo com estrutura moderna
+      - name: Limpar build anterior
         script: |
-          rm -rf android ios web linux macos windows
-          flutter create . --platforms=android --org com.boticario.app
-      - name: Instalar dependencias
-        script: flutter pub get
+          flutter clean
+      - name: Instalar dependencias do projeto
+        script: |
+          flutter pub get
       - name: Construir APK Release
-        script: flutter build apk --release
+        script: |
+          flutter build apk --release
     artifacts:
       - build/**/outputs/**/*.apk
