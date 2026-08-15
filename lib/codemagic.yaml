@@ -1,6 +1,6 @@
 workflows:
-  flutter-workflow:
-    name: Compilar APK Boticario
+  android-workflow:
+    name: Compilar APK Android
     max_build_timeout: 30
     environment:
       flutter: stable
