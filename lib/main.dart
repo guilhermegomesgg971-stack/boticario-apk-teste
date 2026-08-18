@@ -17,29 +17,42 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Marketplace PRO - Pres. Dutra")),
+      appBar: AppBar(title: Text("Marketplace PRO")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ListTile(
-              leading: Icon(Icons.store),
-              title: Text("Cliente"),
-              onTap: () => print("Abrir Vitrine"),
+              leading: Icon(Icons.store, color: Colors.green),
+              title: Text("Cliente - Vitrine"),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TelaPadrao("Vitrine de Produtos"))),
             ),
             ListTile(
-              leading: Icon(Icons.shopping_bag),
-              title: Text("Vendedor"),
-              onTap: () => print("Abrir Painel Loja"),
+              leading: Icon(Icons.shopping_bag, color: Colors.blue),
+              title: Text("Vendedor - Painel"),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TelaPadrao("Painel do Vendedor"))),
             ),
             ListTile(
-              leading: Icon(Icons.delivery_dining),
-              title: Text("Entregador"),
-              onTap: () => print("Abrir Entregas"),
+              leading: Icon(Icons.delivery_dining, color: Colors.orange),
+              title: Text("Entregador - Entregas"),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => TelaPadrao("Painel de Entregas"))),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class TelaPadrao extends StatelessWidget {
+  final String titulo;
+  TelaPadrao(this.titulo);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(titulo)),
+      body: Center(child: Text("Você está na tela: $titulo", style: TextStyle(fontSize: 20))),
     );
   }
 }
