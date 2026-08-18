@@ -4,19 +4,16 @@ workflows:
     max_build_duration: 30
     environment:
       flutter: stable
-      xcode: latest
-      cocoapods: default
     scripts:
-      - name: Limpar build anterior
+      - name: Limpar tudo e recriar projeto moderno
         script: |
           flutter clean
-      - name: Garantir configuracao moderna do Android
-        script: |
-          flutter create . --org com.marketplace.pro --platforms android
-      - name: Instalar dependencias do projeto
+          rm -rf android ios
+          flutter create . --platforms=android --org com.marketplace.pro
+      - name: Instalar dependencias
         script: |
           flutter pub get
-      - name: Construir APK Release
+      - name: Gerar APK final
         script: |
           flutter build apk --release
     artifacts:
