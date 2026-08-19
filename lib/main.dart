@@ -404,7 +404,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // Avaliações / Reputação da Loja (ADICIONADO)
+            // Avaliações / Reputação da Loja
             Card(
               child: ListTile(
                 leading: Icon(Icons.star, color: Colors.amber, size: 28),
@@ -618,7 +618,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status Online / Offline do Entregador (ADICIONADO)
+            // Status Online / Offline do Entregador
             Card(
               color: entregadorOnline ? Colors.orange[50] : Colors.grey[200],
               child: SwitchListTile(
@@ -640,7 +640,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
             ),
             SizedBox(height: 10),
 
-            // Ganhos do Dia / Extrato (ADICIONADO)
+            // Ganhos do Dia / Extrato
             Card(
               child: ListTile(
                 leading: Icon(Icons.account_balance_wallet, color: Colors.green, size: 28),
@@ -660,7 +660,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
               ),
             ),
 
-            // Avaliações e Reputação do Entregador (ADICIONADO)
+            // Avaliações e Reputação do Entregador
             Card(
               child: ListTile(
                 leading: Icon(Icons.star, color: Colors.amber, size: 28),
@@ -680,7 +680,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
               ),
             ),
 
-            // Suporte / Emergência (ADICIONADO)
+            // Suporte / Emergência
             Card(
               child: ListTile(
                 leading: Icon(Icons.support_agent, color: Colors.blue),
@@ -714,7 +714,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Botão GPS (ADICIONADO)
+                        // Botão GPS
                         IconButton(
                           icon: Icon(Icons.map, color: Colors.blue),
                           tooltip: "Abrir Rota GPS",
@@ -729,6 +729,7 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
                           onPressed: () {
                             setState(() {
                               ganhosHoje += 12.00;
+                              entregasDisponiveis.removeAt(index);
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Entrega aceita! Dirija-se à loja."), duration: Duration(seconds: 2)),
