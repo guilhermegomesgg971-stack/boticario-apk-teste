@@ -90,9 +90,9 @@ class ClienteScreen extends StatefulWidget {
 
 class _ClienteScreenState extends State<ClienteScreen> {
   final List<Map<String, dynamic>> produtos = [
-    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro"},
-    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella"},
-    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House"},
+    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro", "estoque": 10},
+    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella", "estoque": 5},
+    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House", "estoque": 12},
   ];
 
   final List<Map<String, dynamic>> carrinho = [];
@@ -109,7 +109,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
             margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: ListTile(
               title: Text(p["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("${p["loja"]} - R\$ ${p["preco"].toStringAsFixed(2)}"),
+              subtitle: Text("${p["loja"]} - R\$ ${p["preco"].toStringAsFixed(2)} | Estoque: ${p["estoque"]} un."),
               trailing: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 onPressed: () {
@@ -155,7 +155,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
   }
 }
 
-// ================= TELA DO VENDEDOR (COMPLETA COM OS NOVOS BOTÕES) =================
+// ================= TELA DO VENDEDOR =================
 class VendedorScreen extends StatefulWidget {
   @override
   _VendedorScreenState createState() => _VendedorScreenState();
@@ -164,11 +164,18 @@ class VendedorScreen extends StatefulWidget {
 class _VendedorScreenState extends State<VendedorScreen> {
   final TextEditingController nomeController = TextEditingController();
   final TextEditingController precoController = TextEditingController();
-  final List<String> meusProdutos = ["Açaí Tradicional 500ml", "Pizza Marguerita Grande"];
+  final TextEditingController estoqueController = TextEditingController();
+  
+  final List<Map<String, dynamic>> meusProdutos = [
+    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "estoque": 10, "categoria": "Sobremesas"},
+    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "estoque": 5, "categoria": "Alimentação"},
+  ];
   
   bool lojaAberta = true;
   int pedidosRecebidosCount = 2;
   String tempoPreparo = "30-40 min";
+  String categoriaSelecionada = "Alimentação";
+  String cupomAtivo = "Nenhum cupom ativo";
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +229,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
             ),
             SizedBox(height: 10),
 
-            // NOVO: Histórico de Vendas
+            // Histórico de Vendas
             Card(
               child: ListTile(
                 leading: Icon(Icons.assessment, color: Colors.purple),
@@ -242,7 +249,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // NOVO: Tempo de Preparo
+            // Tempo de Preparo
             Card(
               child: ListTile(
                 leading: Icon(Icons.timer, color: Colors.orange),
@@ -260,7 +267,58 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // NOVO: Suporte / Chat
+            // Criar Cupom / Desconto
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.local_offer, color: Colors.redAccent),
+                title: Text("Criar Cupom / Desconto", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Status: $cupomAtivo"),
+                trailing: Icon(Icons.add_box, size: 20, color: Colors.redAccent),
+                onTap: () {
+                  setState(() {
+                    cupomAtivo = cupomAtivo == "Nenhum cupom ativo" ? "PROMO10 (10% OFF)" : "Nenhum cupom ativo";
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Status do cupom alterado!")),
+                  );
+                },
+              ),
+            ),
+
+            // Horário de Funcionamento
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.access_time, color: Colors.blueGrey),
+                title: Text("Horário de Funcionamento", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Automático: 18:00 às 23:30"),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text("Horários da Loja"),
+                      content: Text("Sua loja está configurada para aceitar pedidos automaticamente das 18h às 23h30."),
+                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Relatório p/ WhatsApp
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.share, color: Colors.teal),
+                title: Text("Relatório p/ WhatsApp", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Enviar resumo do caixa para o dono/gerente"),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Resumo copiado para compartilhamento!"), duration: Duration(seconds: 1)),
+                  );
+                },
+              ),
+            ),
+
+            // Suporte / Chat
             Card(
               child: ListTile(
                 leading: Icon(Icons.chat_bubble, color: Colors.green),
@@ -276,45 +334,78 @@ class _VendedorScreenState extends State<VendedorScreen> {
 
             Divider(height: 30),
 
-            Text("Cadastrar Novo Produto", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            // SEÇÃO DE CADASTRO PROFISSIONAL DE PRODUTOS
+            Text("Gerenciar Vitrine e Estoque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             TextField(controller: nomeController, decoration: InputDecoration(labelText: "Nome do Produto", border: OutlineInputBorder())),
             SizedBox(height: 10),
-            TextField(controller: precoController, decoration: InputDecoration(labelText: "Preço (R\$)", border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(controller: precoController, decoration: InputDecoration(labelText: "Preço (R\$)", border: OutlineInputBorder()), keyboardType: TextInputType.number),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: TextField(controller: estoqueController, decoration: InputDecoration(labelText: "Qtd. em Estoque", border: OutlineInputBorder()), keyboardType: TextInputType.number),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: categoriaSelecionada,
+              decoration: InputDecoration(labelText: "Categoria do Produto", border: OutlineInputBorder()),
+              items: ["Alimentação", "Bebidas", "Sobremesas", "Serviços/Outros"]
+                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                  .toList(),
+              onChanged: (val) {
+                setState(() {
+                  categoriaSelecionada = val!;
+                });
+              },
+            ),
             SizedBox(height: 10),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, minimumSize: Size(double.infinity, 45)),
               onPressed: () {
-                if (nomeController.text.isNotEmpty) {
+                if (nomeController.text.isNotEmpty && precoController.text.isNotEmpty) {
                   setState(() {
-                    meusProdutos.add(nomeController.text);
+                    meusProdutos.add({
+                      "nome": nomeController.text,
+                      "preco": double.tryParse(precoController.text) ?? 0.0,
+                      "estoque": int.tryParse(estoqueController.text) ?? 1,
+                      "categoria": categoriaSelecionada,
+                    });
                     nomeController.clear();
                     precoController.clear();
+                    estoqueController.clear();
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto cadastrado com sucesso!")));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto adicionado à vitrine com sucesso!")));
                 }
               },
-              child: Text("Salvar Produto", style: TextStyle(color: Colors.white, fontSize: 16)),
+              child: Text("Adicionar/Atualizar na Vitrine", style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
             Divider(height: 30),
-            Text("Seus Produtos Ativos:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("Sua Vitrine Ativa:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             ListView.builder(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: meusProdutos.length,
               itemBuilder: (context, index) {
+                final prod = meusProdutos[index];
                 return Card(
                   child: ListTile(
                     leading: Icon(Icons.fastfood, color: Colors.blue),
-                    title: Text(meusProdutos[index]),
+                    title: Text(prod["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text("Preço: R\$ ${prod["preco"].toStringAsFixed(2)} | Estoque: ${prod["estoque"]} un. | [${prod["categoria"]}]"),
+                    isThreeLine: true,
                     trailing: IconButton(
                       icon: Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () {
                         setState(() {
                           meusProdutos.removeAt(index);
                         });
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto removido do estoque.")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto removido da vitrine.")));
                       },
                     ),
                   ),
