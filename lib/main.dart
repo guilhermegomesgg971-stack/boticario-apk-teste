@@ -82,7 +82,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ================= TELA DO CLIENTE (ATUALIZADA COM OS NOVOS BOTÕES) =================
+// ================= TELA DO CLIENTE =================
 class ClienteScreen extends StatefulWidget {
   @override
   _ClienteScreenState createState() => _ClienteScreenState();
@@ -147,6 +147,16 @@ class _ClienteScreenState extends State<ClienteScreen> {
                           title: Text("Status do Pedido"),
                           content: Text("Situação atual: $statusPedidoAtual"),
                           actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                        ),
+                      );
+                    }),
+                    _buildAtalhoBotao(Icons.star_rate, "Avaliar Loja", Colors.amber, () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Avaliar Último Pedido"),
+                          content: Text("O que você achou da comida e da entrega?\n\n⭐⭐⭐⭐⭐ (5/5 Estrelas)"),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Enviar Avaliação"))],
                         ),
                       );
                     }),
@@ -394,6 +404,26 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
+            // Avaliações / Reputação da Loja (ADICIONADO)
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.star, color: Colors.amber, size: 28),
+                title: Text("Reputação e Avaliações", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Nota Média: 4.8 ⭐ (Com base em 45 avaliações)"),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text("Comentários dos Clientes"),
+                      content: Text("• 'Comida muito boa e quente!' (5⭐)\n• 'Entrega rápida, recomendo!' (5⭐)\n• 'Achei o preço um pouco alto.' (4⭐)"),
+                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                    ),
+                  );
+                },
+              ),
+            ),
+
             // Tempo de Preparo
             Card(
               child: ListTile(
@@ -565,7 +595,15 @@ class _VendedorScreenState extends State<VendedorScreen> {
 }
 
 // ================= TELA DO ENTREGADOR =================
-class EntregadorScreen extends StatelessWidget {
+class EntregadorScreen extends StatefulWidget {
+  @override
+  _EntregadorScreenState createState() => _EntregadorScreenState();
+}
+
+class _EntregadorScreenState extends State<EntregadorScreen> {
+  bool entregadorOnline = true;
+  double ganhosHoje = 85.00;
+  
   final List<Map<String, String>> entregasDisponiveis = [
     {"pedido": "Pedido #01", "rota": "Centro ➔ Bairro Tres Vendas", "valor": "R\$ 10,00"},
     {"pedido": "Pedido #02", "rota": "Vila Nova ➔ Aldeia", "valor": "R\$ 15,00"},
@@ -575,29 +613,137 @@ class EntregadorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Painel de Entregas")),
-      body: ListView.builder(
-        itemCount: entregasDisponiveis.length,
-        itemBuilder: (context, index) {
-          final entrega = entregasDisponiveis[index];
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: ListTile(
-              leading: Icon(Icons.motorcycle, color: Colors.orange, size: 30),
-              title: Text(entrega["pedido"]!, style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("Rota: ${entrega["rota"]}\nTaxa: ${entrega["valor"]}"),
-              isThreeLine: true,
-              trailing: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                onPressed: () {
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Status Online / Offline do Entregador (ADICIONADO)
+            Card(
+              color: entregadorOnline ? Colors.orange[50] : Colors.grey[200],
+              child: SwitchListTile(
+                title: Text(
+                  entregadorOnline ? "Status: Online (Recebendo Corridas)" : "Status: Offline (Descansando)",
+                  style: TextStyle(fontWeight: FontWeight.bold, color: entregadorOnline ? Colors.orange[800] : Colors.grey[700]),
+                ),
+                subtitle: Text("Alterne para ficar visível para entregas na cidade"),
+                value: entregadorOnline,
+                onChanged: (bool value) {
+                  setState(() {
+                    entregadorOnline = value;
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Entrega aceita! Navegando..."), duration: Duration(seconds: 2)),
+                    SnackBar(content: Text(entregadorOnline ? "Você está online na praça!" : "Você ficou offline.")),
                   );
                 },
-                child: Text("Aceitar", style: TextStyle(color: Colors.white)),
               ),
             ),
-          );
-        },
+            SizedBox(height: 10),
+
+            // Ganhos do Dia / Extrato (ADICIONADO)
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.account_balance_wallet, color: Colors.green, size: 28),
+                title: Text("Meus Ganhos de Hoje", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Total faturado: R\$ ${ganhosHoje.toStringAsFixed(2)} (6 entregas)"),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text("Extrato Detalhado"),
+                      content: Text("• Corrida #01: R\$ 12,00\n• Corrida #02: R\$ 15,00\n• Corrida #03: R\$ 10,00\n• Taxa de Gorjeta: R\$ 8,00\n\nTotal na Semana: R\$ 420,00"),
+                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Avaliações e Reputação do Entregador (ADICIONADO)
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.star, color: Colors.amber, size: 28),
+                title: Text("Minha Reputação na Praça", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Nota Média: 4.9 ⭐ (Excelente Entregador)"),
+                trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text("Avaliações dos Clientes"),
+                      content: Text("• 'Muito educado e ágil!' (5⭐)\n• 'Chegou antes do prazo.' (5⭐)\n• 'Cuidado redobrado com o pedido.' (5⭐)"),
+                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Suporte / Emergência (ADICIONADO)
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.support_agent, color: Colors.blue),
+                title: Text("Suporte para Entregadores", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("Problemas com endereço ou cliente ausente"),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Abrindo canal com o suporte..."), duration: Duration(seconds: 1)),
+                  );
+                },
+              ),
+            ),
+
+            Divider(height: 30),
+            Text("Entregas Disponíveis na Região:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: entregasDisponiveis.length,
+              itemBuilder: (context, index) {
+                final entrega = entregasDisponiveis[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 6),
+                  child: ListTile(
+                    leading: Icon(Icons.motorcycle, color: Colors.orange, size: 30),
+                    title: Text(entrega["pedido"]!, style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text("Rota: ${entrega["rota"]}\nTaxa: ${entrega["valor"]}"),
+                    isThreeLine: true,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Botão GPS (ADICIONADO)
+                        IconButton(
+                          icon: Icon(Icons.map, color: Colors.blue),
+                          tooltip: "Abrir Rota GPS",
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Abrindo GPS para rota ${entrega["rota"]}...")),
+                            );
+                          },
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          onPressed: () {
+                            setState(() {
+                              ganhosHoje += 12.00;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Entrega aceita! Dirija-se à loja."), duration: Duration(seconds: 2)),
+                            );
+                          },
+                          child: Text("Aceitar", style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
