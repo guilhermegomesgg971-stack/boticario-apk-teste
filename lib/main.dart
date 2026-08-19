@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MarketplaceApp());
 
-// ================= DADOS GLOBAIS DE INTEGRAÇÃO =================
+// ================= ESTADO GLOBAL DO SISTEMA =================
 List<Map<String, dynamic>> pedidosGlobais = [];
 List<Map<String, dynamic>> entregasProntasGlobais = [];
+List<Map<String, dynamic>> pedidosEmAndamentoCliente = [];
 
 class MarketplaceApp extends StatelessWidget {
   @override
@@ -24,23 +25,23 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Marketplace PRO - Pres. Dutra")),
+      appBar: AppBar(title: Text("Marketplace PRO - Central Avançada")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Selecione o setor para testar as interações em massa:",
+              "Selecione o painel para testar os fluxos avançados:",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[800]),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 25),
-            _buildMenuCard(context, "Área do Cliente", "Vitrine, carrinho, cupons e chat", Icons.store, Colors.green, ClienteScreen()),
+            _buildMenuCard(context, "Área do Cliente", "Vitrine, Rastreamento ao Vivo e Carrinho", Icons.store, Colors.green, ClienteScreen()),
             SizedBox(height: 15),
-            _buildMenuCard(context, "Área do Vendedor", "Estoque, relatórios, status e pedidos", Icons.shopping_bag, Colors.blue, VendedorScreen()),
+            _buildMenuCard(context, "Área do Vendedor", "Gestão de Vitrine, Status e Despacho", Icons.shopping_bag, Colors.blue, VendedorScreen()),
             SizedBox(height: 15),
-            _buildMenuCard(context, "Área do Entregador", "Rotas GPS, ganhos, status e corridas", Icons.delivery_dining, Colors.orange, EntregadorScreen()),
+            _buildMenuCard(context, "Área do Entregador", "Mapa GPS Integrado e Extrato de Corridas", Icons.delivery_dining, Colors.orange, EntregadorScreen()),
           ],
         ),
       ),
@@ -66,7 +67,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ================= TELA DO CLIENTE (TODOS OS BOTÕES INTERATIVOS) =================
+// ================= TELA DO CLIENTE =================
 class ClienteScreen extends StatefulWidget {
   @override
   _ClienteScreenState createState() => _ClienteScreenState();
@@ -74,108 +75,48 @@ class ClienteScreen extends StatefulWidget {
 
 class _ClienteScreenState extends State<ClienteScreen> {
   final List<Map<String, dynamic>> produtos = [
-    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro", "estoque": 10, "categoria": "Sobremesas"},
-    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella", "estoque": 5, "categoria": "Alimentação"},
-    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House", "estoque": 12, "categoria": "Alimentação"},
-    {"nome": "Água Mineral 20L", "preco": 12.00, "loja": "Disque Água", "estoque": 20, "categoria": "Mercado"},
+    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro", "categoria": "Sobremesas"},
+    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella", "categoria": "Alimentação"},
+    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House", "categoria": "Alimentação"},
   ];
 
   final List<Map<String, dynamic>> carrinho = [];
-  String categoriaFiltro = "Todos";
-  String statusPedidoAtual = "Nenhum pedido em andamento";
-  double saldoCashback = 25.00;
 
   @override
   Widget build(BuildContext context) {
-    final produtosFiltrados = categoriaFiltro == "Todos" 
-        ? produtos 
-        : produtos.where((p) => p["categoria"] == categoriaFiltro).toList();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text("Painel do Cliente"),
+        title: Text("Vitrine do Cliente"),
         actions: [
           IconButton(
-            icon: Icon(Icons.wallet),
-            tooltip: "Cashback",
-            onPressed: () => _mostrarAlerta("Carteira Digital", "Seu saldo de Cashback é de R\$ ${saldoCashback.toStringAsFixed(2)}."),
+            icon: Icon(Icons.radar, color: Colors.white),
+            tooltip: "Rastrear Pedidos",
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => RastreioClienteScreen()));
+            },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // BARRA DE ATALHOS SUPERIOR (TODOS OS 7 BOTÕES)
-            Container(
-              padding: EdgeInsets.all(12),
-              color: Colors.white,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _at(Icons.motorcycle, "Acompanhar", Colors.orange, () => _mostrarAlerta("Status", statusPedidoAtual)),
-                    _at(Icons.star, "Avaliar", Colors.amber, () => _mostrarAlerta("Avaliação", "Último pedido avaliado com sucesso! ⭐⭐⭐⭐⭐")),
-                    _at(Icons.favorite, "Favoritos", Colors.red, () => _mostrarSnack("Abrindo lista de lojas favoritas...")),
-                    _at(Icons.local_offer, "Cupons", Colors.green, () => _mostrarAlerta("Cupons", "Disponíveis:\n• PRIMEIRACOMPRA (R\$ 10 OFF)\n• FRETEGRATIS")),
-                    _at(Icons.location_on, "Endereço", Colors.blue, () => _mostrarAlerta("Endereço", "Rua Principal, 120 - Centro, Pres. Dutra")),
-                    _at(Icons.history, "Pedir de Novo", Colors.purple, () => _mostrarSnack("Repetindo último pedido de Açaí...")),
-                    _at(Icons.chat, "Chat Loja", Colors.teal, () => _mostrarSnack("Abrindo chat com o estabelecimento...")),
-                  ],
-                ),
+      body: ListView.builder(
+        itemCount: produtos.length,
+        itemBuilder: (context, index) {
+          final p = produtos[index];
+          return Card(
+            margin: EdgeInsets.all(10),
+            child: ListTile(
+              title: Text(p["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text("${p["loja"]} - R\$ ${p["preco"].toStringAsFixed(2)}"),
+              trailing: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                onPressed: () {
+                  setState(() => carrinho.add(p));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${p["nome"]} adicionado!")));
+                },
+                child: Text("Comprar", style: TextStyle(color: Colors.white)),
               ),
             ),
-            SizedBox(height: 10),
-
-            // FILTROS DE CATEGORIA
-            Container(
-              height: 45,
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: ["Todos", "Alimentação", "Sobremesas", "Mercado"].map((cat) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(cat),
-                      selected: categoriaFiltro == cat,
-                      onSelected: (bool selected) => setState(() => categoriaFiltro = cat),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            SizedBox(height: 10),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text("Vitrine Disponível", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: produtosFiltrados.length,
-              itemBuilder: (context, index) {
-                final p = produtosFiltrados[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: ListTile(
-                    title: Text(p["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("${p["loja"]} • R\$ ${p["preco"].toStringAsFixed(2)}"),
-                    trailing: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                      onPressed: () {
-                        setState(() => carrinho.add(p));
-                        _mostrarSnack("${p["nome"]} adicionado!");
-                      },
-                      child: Text("Comprar", style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(16),
@@ -183,253 +124,193 @@ class _ClienteScreenState extends State<ClienteScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Carrinho: ${carrinho.length} itens", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ElevatedButton.icon(
+            Text("Carrinho: ${carrinho.length} itens", style: TextStyle(fontWeight: FontWeight.bold)),
+            ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              icon: Icon(Icons.shopping_cart, color: Colors.white),
-              label: Text("Finalizar Pedido", style: TextStyle(color: Colors.white)),
               onPressed: carrinho.isEmpty ? null : () {
                 setState(() {
-                  statusPedidoAtual = "Enviado para a Loja";
-                  pedidosGlobais.add({
+                  final novoPedido = {
                     "id": "Pedido #${DateTime.now().second}",
                     "itens": carrinho.map((i) => i["nome"]).join(", "),
                     "total": carrinho.fold(0.0, (s, i) => s + i["preco"]),
-                    "status": "Aguardando Preparo"
-                  });
+                    "etapa": 1 // 1: Aguardando Vendedor
+                  };
+                  pedidosGlobais.add(novoPedido);
+                  pedidosEmAndamentoCliente.add(novoPedido);
                   carrinho.clear();
                 });
-                _mostrarAlerta("Sucesso", "Pedido enviado ao Vendedor!");
+                Navigator.push(context, MaterialPageRoute(builder: (context) => RastreioClienteScreen()));
               },
+              child: Text("Finalizar Pedido e Rastrear", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _at(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12.0),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          children: [
-            CircleAvatar(backgroundColor: color.withOpacity(0.2), child: Icon(icon, color: color, size: 20)),
-            SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
+// TELA DE RASTREIO AO VIVO DO CLIENTE (COM LINHA DO TEMPO)
+class RastreioClienteScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Rastreamento em Tempo Real")),
+      body: pedidosEmAndamentoCliente.isEmpty
+          ? Center(child: Text("Nenhum pedido ativo no momento."))
+          : ListView.builder(
+              itemCount: pedidosEmAndamentoCliente.length,
+              itemBuilder: (context, index) {
+                final p = pedidosEmAndamentoCliente[index];
+                return Card(
+                  margin: EdgeInsets.all(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p["id"], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text("Itens: ${p["itens"]}"),
+                        SizedBox(height: 15),
+                        LinearProgressIndicator(value: 0.6, color: Colors.green),
+                        SizedBox(height: 15),
+                        _buildPassoRastreio("1. Pedido enviado à loja", true),
+                        _buildPassoRastreio("2. Loja preparando o pedido", true),
+                        _buildPassoRastreio("3. Entregador a caminho da entrega", false),
+                        _buildPassoRastreio("4. Pedido entregue", false),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
-  void _mostrarAlerta(String titulo, String msg) {
-    showDialog(context: context, builder: (c) => AlertDialog(title: Text(titulo), content: Text(msg), actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text("OK"))]));
-  }
-
-  void _mostrarSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), duration: Duration(milliseconds: 800)));
+  Widget _buildPassoRastreio(String texto, bool concluido) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Icon(concluido ? Icons.check_circle : Icons.radio_button_unchecked, color: concluido ? Colors.green : Colors.grey),
+          SizedBox(width: 10),
+          Text(texto, style: TextStyle(color: concluido ? Colors.black : Colors.grey, fontWeight: concluido ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
   }
 }
 
-// ================= TELA DO VENDEDOR (TODOS OS BOTÕES INTERATIVOS) =================
+// ================= TELA DO VENDEDOR =================
 class VendedorScreen extends StatefulWidget {
   @override
   _VendedorScreenState createState() => _VendedorScreenState();
 }
 
 class _VendedorScreenState extends State<VendedorScreen> {
-  bool lojaAberta = true;
-  String tempoPreparo = "30-40 min";
-  String cupomStatus = "Desativado";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Painel do Vendedor (${pedidosGlobais.length} novos)")),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // STATUS LOJA
-            Card(
-              color: lojaAberta ? Colors.green[50] : Colors.red[50],
-              child: SwitchListTile(
-                title: Text(lojaAberta ? "Loja Aberta" : "Loja Fechada", style: TextStyle(fontWeight: FontWeight.bold)),
-                value: lojaAberta,
-                onChanged: (v) => setState(() => lojaAberta = v),
-              ),
-            ),
-            SizedBox(height: 8),
-
-            // CARDS DE GESTÃO (HISTÓRICO, AVALIAÇÕES, TEMPO, CUPOM)
-            _cardAcao(Icons.assessment, "Histórico de Vendas", "R\$ 320,00 faturados hoje", Colors.purple, () {
-              _alerta("Relatório", "Total de vendas: R\$ 320,00\nPedidos concluídos: 10");
-            }),
-            _cardAcao(Icons.star, "Reputação da Loja", "Nota 4.9 (42 avaliações)", Colors.amber, () {
-              _alerta("Avaliações", "• Ótimo atendimento!\n• Comida excelente.");
-            }),
-            _cardAcao(Icons.timer, "Tempo de Preparo", "Atual: $tempoPreparo", Colors.orange, () {
-              setState(() => tempoPreparo = tempoPreparo == "30-40 min" ? "45-60 min" : "30-40 min");
-              _snack("Tempo alterado para $tempoPreparo");
-            }),
-            _cardAcao(Icons.local_offer, "Gerenciar Cupons", "Status: $cupomStatus", Colors.redAccent, () {
-              setState(() => cupomStatus = cupomStatus == "Desativado" ? "Ativo (10% OFF)" : "Desativado");
-            }),
-
-            Divider(height: 30),
-            Text("Pedidos Recebidos:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-
-            pedidosGlobais.isEmpty
-                ? Padding(padding: EdgeInsets.all(20), child: Center(child: Text("Nenhum pedido pendente.")))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: pedidosGlobais.length,
-                    itemBuilder: (context, index) {
-                      final p = pedidosGlobais[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text("${p["id"]} - R\$ ${p["total"].toStringAsFixed(2)}", style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("Itens: ${p["itens"]}"),
-                          trailing: ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                            onPressed: () {
-                              setState(() {
-                                entregasProntasGlobais.add({
-                                  "pedido": p["id"],
-                                  "rota": "Estabelecimento ➔ Cliente",
-                                  "valor": "R\$ 12,00"
-                                });
-                                pedidosGlobais.removeAt(index);
-                              });
-                              _snack("Despachado para os entregadores!");
-                            },
-                            child: Text("Pronto p/ Entrega", style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      );
-                    },
+      body: pedidosGlobais.isEmpty
+          ? Center(child: Text("Nenhum pedido recebido ainda."))
+          : ListView.builder(
+              itemCount: pedidosGlobais.length,
+              itemBuilder: (context, index) {
+                final p = pedidosGlobais[index];
+                return Card(
+                  margin: EdgeInsets.all(10),
+                  child: ListTile(
+                    title: Text(p["id"], style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text("Itens: ${p["itens"]}\nTotal: R\$ ${p["total"].toStringAsFixed(2)}"),
+                    isThreeLine: true,
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                      onPressed: () {
+                        setState(() {
+                          entregasProntasGlobais.add({
+                            "pedido": p["id"],
+                            "rota": "Loja Central ➔ Endereço do Cliente",
+                            "taxa": "R\$ 12,00"
+                          });
+                          pedidosGlobais.removeAt(index);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Pedido despachado para o entregador!")));
+                      },
+                      child: Text("Despachar", style: TextStyle(color: Colors.white)),
+                    ),
                   ),
-          ],
-        ),
-      ),
+                );
+              },
+            ),
     );
   }
-
-  Widget _cardAcao(IconData icon, String titulo, String sub, Color cor, VoidCallback onTap) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: cor),
-        title: Text(titulo, style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(sub),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  void _alerta(String t, String m) => showDialog(context: context, builder: (c) => AlertDialog(title: Text(t), content: Text(m), actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text("OK"))]));
-  void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 }
 
-// ================= TELA DO ENTREGADOR (TODOS OS BOTÕES INTERATIVOS) =================
+// ================= TELA DO ENTREGADOR (COM SIMULAÇÃO DE MAPA GPS) =================
 class EntregadorScreen extends StatefulWidget {
   @override
   _EntregadorScreenState createState() => _EntregadorScreenState();
 }
 
 class _EntregadorScreenState extends State<EntregadorScreen> {
-  bool online = true;
-  double ganhos = 95.00;
+  double ganhosTotais = 120.00;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Painel do Entregador (${entregasProntasGlobais.length} disponíveis)")),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // STATUS ONLINE/OFFLINE
-            Card(
-              color: online ? Colors.orange[50] : Colors.grey[200],
-              child: SwitchListTile(
-                title: Text(online ? "Status: Online (Pronto p/ Corridas)" : "Status: Offline", style: TextStyle(fontWeight: FontWeight.bold)),
-                value: online,
-                onChanged: (v) => setState(() => online = v),
-              ),
-            ),
-            SizedBox(height: 8),
-
-            // GANHOS E REPUTAÇÃO
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.account_balance_wallet, color: Colors.green),
-                title: Text("Extrato de Ganhos", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Faturado hoje: R\$ ${ganhos.toStringAsFixed(2)}"),
-                onTap: () => _alerta("Ganhos", "Suas entregas de hoje totalizaram R\$ ${ganhos.toStringAsFixed(2)}."),
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.star, color: Colors.amber),
-                title: Text("Reputação na Praça", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Nota: 4.9 ⭐ (Excelente)"),
-              ),
-            ),
-
-            Divider(height: 30),
-            Text("Entregas Prontas nas Lojas:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-
-            entregasProntasGlobais.isEmpty
-                ? Padding(padding: EdgeInsets.all(20), child: Center(child: Text("Nenhuma corrida no momento.")))
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: entregasProntasGlobais.length,
-                    itemBuilder: (context, index) {
-                      final e = entregasProntasGlobais[index];
-                      return Card(
-                        child: ListTile(
-                          leading: Icon(Icons.motorcycle, color: Colors.orange, size: 30),
-                          title: Text(e["pedido"], style: TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("Rota: ${e["rota"]} • Taxa: ${e["valor"]}"),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+      appBar: AppBar(title: Text("Painel do Entregador - Ganhos: R\$ ${ganhosTotais.toStringAsFixed(2)}")),
+      body: entregasProntasGlobais.isEmpty
+          ? Center(child: Text("Nenhuma rota disponível no momento."))
+          : ListView.builder(
+              itemCount: entregasProntasGlobais.length,
+              itemBuilder: (context, index) {
+                final e = entregasProntasGlobais[index];
+                return Card(
+                  margin: EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 120,
+                        color: Colors.blue[50],
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.map, color: Colors.blue),
-                                onPressed: () => _snack("Abrindo rota via GPS..."),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                                onPressed: () {
-                                  setState(() {
-                                    ganhos += 12.00;
-                                    entregasProntasGlobais.removeAt(index);
-                                  });
-                                  _snack("Corrida aceita com sucesso!");
-                                },
-                                child: Text("Aceitar", style: TextStyle(color: Colors.white)),
-                              ),
+                              Icon(Icons.map, size: 40, color: Colors.blue),
+                              Text("Simulação de Mapa GPS Ativa", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[800])),
+                              Text("Rota: ${e["rota"]}", style: TextStyle(fontSize: 12)),
                             ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                      ListTile(
+                        title: Text(e["pedido"], style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text("Taxa da Corrida: ${e["taxa"]}"),
+                        trailing: ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          onPressed: () {
+                            setState(() {
+                              ganhosTotais += 12.00;
+                              entregasProntasGlobais.removeAt(index);
+                            });
+                            showDialog(
+                              context: context,
+                              builder: (c) => AlertDialog(
+                                title: Text("Corrida Concluída!"),
+                                content: Text("Você completou a entrega com sucesso. R\$ 12,00 adicionados aos seus ganhos."),
+                                actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text("OK"))],
+                              ),
+                            );
+                          },
+                          child: Text("Aceitar e Concluir", style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ],
                   ),
-          ],
-        ),
-      ),
+                );
+              },
+            ),
     );
   }
-
-  void _alerta(String t, String m) => showDialog(context: context, builder: (c) => AlertDialog(title: Text(t), content: Text(m), actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text("OK"))]));
-  void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 }
