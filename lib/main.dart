@@ -82,7 +82,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ================= TELA DO CLIENTE =================
+// ================= TELA DO CLIENTE (ATUALIZADA COM OS NOVOS BOTÕES) =================
 class ClienteScreen extends StatefulWidget {
   @override
   _ClienteScreenState createState() => _ClienteScreenState();
@@ -90,41 +90,164 @@ class ClienteScreen extends StatefulWidget {
 
 class _ClienteScreenState extends State<ClienteScreen> {
   final List<Map<String, dynamic>> produtos = [
-    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro", "estoque": 10},
-    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella", "estoque": 5},
-    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House", "estoque": 12},
+    {"nome": "Açaí Tradicional 500ml", "preco": 18.00, "loja": "Açaí do Centro", "estoque": 10, "categoria": "Sobremesas"},
+    {"nome": "Pizza Marguerita Grande", "preco": 45.00, "loja": "Pizzaria Bella", "estoque": 5, "categoria": "Alimentação"},
+    {"nome": "Hambúrguer Artesanal Completo", "preco": 28.50, "loja": "Burger House", "estoque": 12, "categoria": "Alimentação"},
+    {"nome": "Água Mineral 20L", "preco": 12.00, "loja": "Disque Água", "estoque": 20, "categoria": "Mercado"},
   ];
 
   final List<Map<String, dynamic>> carrinho = [];
+  String categoriaFiltro = "Todos";
+  String statusPedidoAtual = "Nenhum pedido em andamento";
+  String enderecoSalvo = "Rua Principal, 120 - Centro";
+  double saldoCashback = 15.50;
 
   @override
   Widget build(BuildContext context) {
+    final produtosFiltrados = categoriaFiltro == "Todos" 
+        ? produtos 
+        : produtos.where((p) => p["categoria"] == categoriaFiltro).toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text("Vitrine do Cliente")),
-      body: ListView.builder(
-        itemCount: produtos.length,
-        itemBuilder: (context, index) {
-          final p = produtos[index];
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: ListTile(
-              title: Text(p["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("${p["loja"]} - R\$ ${p["preco"].toStringAsFixed(2)} | Estoque: ${p["estoque"]} un."),
-              trailing: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: () {
-                  setState(() {
-                    carrinho.add(p);
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("${p["nome"]} adicionado ao carrinho!"), duration: Duration(seconds: 1)),
-                  );
-                },
-                child: Text("Comprar", style: TextStyle(color: Colors.white)),
+      appBar: AppBar(
+        title: Text("Vitrine do Cliente"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.wallet),
+            tooltip: "Carteira / Cashback",
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text("Sua Carteira"),
+                  content: Text("Saldo de Cashback disponível:\nR\$ ${saldoCashback.toStringAsFixed(2)}\n\nPode ser usado nos próximos pedidos!"),
+                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // BARRA DE ATALHOS SUPERIOR DO CLIENTE
+            Container(
+              padding: EdgeInsets.all(10),
+              color: Colors.white,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildAtalhoBotao(Icons.motorcycle, "Acompanhar", Colors.orange, () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Status do Pedido"),
+                          content: Text("Situação atual: $statusPedidoAtual"),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                        ),
+                      );
+                    }),
+                    _buildAtalhoBotao(Icons.favorite, "Favoritos", Colors.red, () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Abrindo lojas e itens favoritos...")));
+                    }),
+                    _buildAtalhoBotao(Icons.local_offer, "Cupons", Colors.green, () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Cupons Disponíveis"),
+                          content: Text("• PRIMEIRACOMPRA (R\$ 10 OFF)\n• FRETEGRATIS (Nas compras acima de R\$ 50)"),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                        ),
+                      );
+                    }),
+                    _buildAtalhoBotao(Icons.location_on, "Endereço", Colors.blue, () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Endereço de Entrega"),
+                          content: Text("Atual: $enderecoSalvo"),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
+                        ),
+                      );
+                    }),
+                    _buildAtalhoBotao(Icons.history, "Pedir de Novo", Colors.purple, () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Carregando último pedido realizado...")));
+                    }),
+                    _buildAtalhoBotao(Icons.chat, "Chat Loja", Colors.teal, () {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Abrindo chat com o vendedor...")));
+                    }),
+                  ],
+                ),
               ),
             ),
-          );
-        },
+            SizedBox(height: 10),
+
+            // FILTROS DE CATEGORIA EM BOTÕES HORIZONTAIS
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text("O que você procura hoje?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            SizedBox(height: 8),
+            Container(
+              height: 40,
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: ["Todos", "Alimentação", "Sobremesas", "Mercado"].map((cat) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: Text(cat),
+                      selected: categoriaFiltro == cat,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          categoriaFiltro = cat;
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: 10),
+
+            // LISTA DE PRODUTOS DA VITRINE
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text("Vitrine de Lojas e Produtos", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: produtosFiltrados.length,
+              itemBuilder: (context, index) {
+                final p = produtosFiltrados[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: ListTile(
+                    title: Text(p["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text("${p["loja"]} - R\$ ${p["preco"].toStringAsFixed(2)} | Estoque: ${p["estoque"]} un."),
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      onPressed: () {
+                        setState(() {
+                          carrinho.add(p);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("${p["nome"]} adicionado ao carrinho!"), duration: Duration(seconds: 1)),
+                        );
+                      },
+                      child: Text("Comprar", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(16),
@@ -138,16 +261,38 @@ class _ClienteScreenState extends State<ClienteScreen> {
               icon: Icon(Icons.shopping_cart, color: Colors.white),
               label: Text("Finalizar Pedido", style: TextStyle(color: Colors.white)),
               onPressed: () {
+                setState(() {
+                  statusPedidoAtual = "Em preparo na loja";
+                });
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text("Resumo do Pedido"),
-                    content: Text("Você tem ${carrinho.length} item(ns) selecionado(s). Total calculado com sucesso!"),
+                    title: Text("Pedido Realizado!"),
+                    content: Text("Você tem ${carrinho.length} item(ns). Pedido enviado com sucesso para a loja! Acompanhe pelo botão superior."),
                     actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
                   ),
                 );
               },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAtalhoBotao(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10.0),
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.2),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            SizedBox(height: 4),
+            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
