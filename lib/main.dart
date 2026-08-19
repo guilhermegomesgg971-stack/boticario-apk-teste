@@ -219,8 +219,8 @@ class _VendedorScreenState extends State<VendedorScreen> {
 // ================= TELA DO ENTREGADOR =================
 class EntregadorScreen extends StatelessWidget {
   final List<Map<String, String>> entregasDisponiveis = [
-    {"pedido": "Pedido #01", "rota": "Centro ➔ Bairro Tres Vendas", "valor": "R$ 10,00"},
-    {"pedido": "Pedido #02", "rota": "Vila Nova ➔ Aldeia", "valor": "R$ 15,00"},
+    {"pedido": "Pedido #01", "rota": "Centro ➔ Bairro Tres Vendas", "valor": "R\$ 10,00"},
+    {"pedido": "Pedido #02", "rota": "Vila Nova ➔ Aldeia", "valor": "R\$ 15,00"},
   ];
 
   @override
