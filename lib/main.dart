@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MarketplaceApp());
 
+// ================= DADOS GLOBAIS DE INTEGRAÇÃO ENTRE OS SETORES =================
+List<Map<String, dynamic>> pedidosGlobais = [];
+List<Map<String, dynamic>> entregasProntasGlobais = [];
+
 class MarketplaceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -195,7 +199,7 @@ class _ClienteScreenState extends State<ClienteScreen> {
             ),
             SizedBox(height: 10),
 
-            // FILTROS DE CATEGORIA EM BOTÕES HORIZONTAIS
+            // FILTROS DE CATEGORIA
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text("O que você procura hoje?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -224,7 +228,6 @@ class _ClienteScreenState extends State<ClienteScreen> {
             ),
             SizedBox(height: 10),
 
-            // LISTA DE PRODUTOS DA VITRINE
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text("Vitrine de Lojas e Produtos", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -270,16 +273,23 @@ class _ClienteScreenState extends State<ClienteScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               icon: Icon(Icons.shopping_cart, color: Colors.white),
               label: Text("Finalizar Pedido", style: TextStyle(color: Colors.white)),
-              onPressed: () {
+              onPressed: carrinho.isEmpty ? null : () {
                 setState(() {
-                  statusPedidoAtual = "Em preparo na loja";
+                  statusPedidoAtual = "Enviado para a Loja";
+                  pedidosGlobais.add({
+                    "id": "Pedido #${DateTime.now().second}",
+                    "itens": carrinho.map((item) => item["nome"]).join(", "),
+                    "total": carrinho.fold(0.0, (sum, item) => sum + item["preco"]),
+                    "status": "Aguardando Preparo"
+                  });
+                  carrinho.clear();
                 });
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text("Pedido Realizado!"),
-                    content: Text("Você tem ${carrinho.length} item(ns). Pedido enviado com sucesso para a loja! Acompanhe pelo botão superior."),
-                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
+                    title: Text("Pedido Realizado com Sucesso!"),
+                    content: Text("Seu pedido foi enviado para o Vendedor. Acompanhe o status no botão superior 'Acompanhar'."),
+                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
                   ),
                 );
               },
@@ -327,7 +337,6 @@ class _VendedorScreenState extends State<VendedorScreen> {
   ];
   
   bool lojaAberta = true;
-  int pedidosRecebidosCount = 2;
   String tempoPreparo = "30-40 min";
   String categoriaSelecionada = "Alimentação";
   String cupomAtivo = "Nenhum cupom ativo";
@@ -335,13 +344,12 @@ class _VendedorScreenState extends State<VendedorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Painel do Vendedor")),
+      appBar: AppBar(title: Text("Painel do Vendedor (${pedidosGlobais.length} pedidos novos)")),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status da Loja
             Card(
               color: lojaAberta ? Colors.green[50] : Colors.red[50],
               child: SwitchListTile(
@@ -355,36 +363,12 @@ class _VendedorScreenState extends State<VendedorScreen> {
                   setState(() {
                     lojaAberta = value;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(lojaAberta ? "Loja aberta com sucesso!" : "Loja fechada para novos pedidos.")),
-                  );
                 },
               ),
             ),
             SizedBox(height: 10),
 
-            // Botão de Pedidos Recebidos
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                minimumSize: Size(double.infinity, 48),
-              ),
-              icon: Icon(Icons.notifications_active, color: Colors.white),
-              label: Text("Ver Pedidos Recebidos ($pedidosRecebidosCount)", style: TextStyle(color: Colors.white, fontSize: 16)),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("Pedidos Chegando"),
-                    content: Text("Você possui $pedidosRecebidosCount pedido(s) aguardando aceite e preparo."),
-                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 10),
-
-            // Histórico de Vendas
+            // HISTÓRICO DE VENDAS
             Card(
               child: ListTile(
                 leading: Icon(Icons.assessment, color: Colors.purple),
@@ -404,7 +388,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // Avaliações / Reputação da Loja
+            // REPUTAÇÃO E AVALIAÇÕES
             Card(
               child: ListTile(
                 leading: Icon(Icons.star, color: Colors.amber, size: 28),
@@ -416,7 +400,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: Text("Comentários dos Clientes"),
-                      content: Text("• 'Comida muito boa e quente!' (5⭐)\n• 'Entrega rápida, recomendo!' (5⭐)\n• 'Achei o preço um pouco alto.' (4⭐)"),
+                      content: Text("• 'Comida muito boa e quente!' (5⭐)\n• 'Entrega rápida, recomendo!' (5⭐)"),
                       actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
                     ),
                   );
@@ -424,7 +408,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // Tempo de Preparo
+            // TEMPO DE PREPARO
             Card(
               child: ListTile(
                 leading: Icon(Icons.timer, color: Colors.orange),
@@ -442,7 +426,7 @@ class _VendedorScreenState extends State<VendedorScreen> {
               ),
             ),
 
-            // Criar Cupom / Desconto
+            // CUPOM
             Card(
               child: ListTile(
                 leading: Icon(Icons.local_offer, color: Colors.redAccent),
@@ -453,63 +437,58 @@ class _VendedorScreenState extends State<VendedorScreen> {
                   setState(() {
                     cupomAtivo = cupomAtivo == "Nenhum cupom ativo" ? "PROMO10 (10% OFF)" : "Nenhum cupom ativo";
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Status do cupom alterado!")),
-                  );
-                },
-              ),
-            ),
-
-            // Horário de Funcionamento
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.access_time, color: Colors.blueGrey),
-                title: Text("Horário de Funcionamento", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Automático: 18:00 às 23:30"),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text("Horários da Loja"),
-                      content: Text("Sua loja está configurada para aceitar pedidos automaticamente das 18h às 23h30."),
-                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Relatório p/ WhatsApp
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.share, color: Colors.teal),
-                title: Text("Relatório p/ WhatsApp", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Enviar resumo do caixa para o dono/gerente"),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Resumo copiado para compartilhamento!"), duration: Duration(seconds: 1)),
-                  );
-                },
-              ),
-            ),
-
-            // Suporte / Chat
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.chat_bubble, color: Colors.green),
-                title: Text("Suporte do Sistema", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Falar com a administração"),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Abrindo canal de suporte..."), duration: Duration(seconds: 1)),
-                  );
                 },
               ),
             ),
 
             Divider(height: 30),
 
-            // SEÇÃO DE CADASTRO PROFISSIONAL DE PRODUTOS
+            // PEDIDOS CHEGANDO DO CLIENTE
+            Text("Pedidos Recebidos dos Clientes:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            pedidosGlobais.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text("Nenhum pedido novo no momento. Faça um pedido na aba do Cliente!"),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: pedidosGlobais.length,
+                    itemBuilder: (context, index) {
+                      final pedido = pedidosGlobais[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: Icon(Icons.notifications_active, color: Colors.indigo),
+                          title: Text("${pedido["id"]} - R\$ ${pedido["total"].toStringAsFixed(2)}", style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text("Itens: ${pedido["itens"]}\nStatus: ${pedido["status"]}"),
+                          isThreeLine: true,
+                          trailing: ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                            onPressed: () {
+                              setState(() {
+                                entregasProntasGlobais.add({
+                                  "pedido": pedido["id"],
+                                  "rota": "Loja ➔ Endereço do Cliente",
+                                  "valor": "R\$ 12,00"
+                                });
+                                pedidosGlobais.removeAt(index);
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Pedido despachado para os Entregadores!")),
+                              );
+                            },
+                            child: Text("Pronto p/ Entrega", style: TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+            Divider(height: 30),
+
+            // GERENCIAR VITRINE
             Text("Gerenciar Vitrine e Estoque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             TextField(controller: nomeController, decoration: InputDecoration(labelText: "Nome do Produto", border: OutlineInputBorder())),
@@ -521,22 +500,9 @@ class _VendedorScreenState extends State<VendedorScreen> {
                 ),
                 SizedBox(width: 10),
                 Expanded(
-                  child: TextField(controller: estoqueController, decoration: InputDecoration(labelText: "Qtd. em Estoque", border: OutlineInputBorder()), keyboardType: TextInputType.number),
+                  child: TextField(controller: estoqueController, decoration: InputDecoration(labelText: "Estoque", border: OutlineInputBorder()), keyboardType: TextInputType.number),
                 ),
               ],
-            ),
-            SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: categoriaSelecionada,
-              decoration: InputDecoration(labelText: "Categoria do Produto", border: OutlineInputBorder()),
-              items: ["Alimentação", "Bebidas", "Sobremesas", "Serviços/Outros"]
-                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                  .toList(),
-              onChanged: (val) {
-                setState(() {
-                  categoriaSelecionada = val!;
-                });
-              },
             ),
             SizedBox(height: 10),
             ElevatedButton(
@@ -554,38 +520,10 @@ class _VendedorScreenState extends State<VendedorScreen> {
                     precoController.clear();
                     estoqueController.clear();
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto adicionado à vitrine com sucesso!")));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto adicionado com sucesso!")));
                 }
               },
-              child: Text("Adicionar/Atualizar na Vitrine", style: TextStyle(color: Colors.white, fontSize: 16)),
-            ),
-            Divider(height: 30),
-            Text("Sua Vitrine Ativa:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: meusProdutos.length,
-              itemBuilder: (context, index) {
-                final prod = meusProdutos[index];
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.fastfood, color: Colors.blue),
-                    title: Text(prod["nome"], style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("Preço: R\$ ${prod["preco"].toStringAsFixed(2)} | Estoque: ${prod["estoque"]} un. | [${prod["categoria"]}]"),
-                    isThreeLine: true,
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          meusProdutos.removeAt(index);
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Produto removido da vitrine.")));
-                      },
-                    ),
-                  ),
-                );
-              },
+              child: Text("Adicionar na Vitrine", style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ],
         ),
@@ -603,56 +541,46 @@ class EntregadorScreen extends StatefulWidget {
 class _EntregadorScreenState extends State<EntregadorScreen> {
   bool entregadorOnline = true;
   double ganhosHoje = 85.00;
-  
-  final List<Map<String, String>> entregasDisponiveis = [
-    {"pedido": "Pedido #01", "rota": "Centro ➔ Bairro Tres Vendas", "valor": "R\$ 10,00"},
-    {"pedido": "Pedido #02", "rota": "Vila Nova ➔ Aldeia", "valor": "R\$ 15,00"},
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Painel de Entregas")),
+      appBar: AppBar(title: Text("Painel de Entregas (${entregasProntasGlobais.length} disponíveis)")),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status Online / Offline do Entregador
             Card(
               color: entregadorOnline ? Colors.orange[50] : Colors.grey[200],
               child: SwitchListTile(
                 title: Text(
-                  entregadorOnline ? "Status: Online (Recebendo Corridas)" : "Status: Offline (Descansando)",
+                  entregadorOnline ? "Entregador Online" : "Entregador Offline",
                   style: TextStyle(fontWeight: FontWeight.bold, color: entregadorOnline ? Colors.orange[800] : Colors.grey[700]),
                 ),
-                subtitle: Text("Alterne para ficar visível para entregas na cidade"),
                 value: entregadorOnline,
                 onChanged: (bool value) {
                   setState(() {
                     entregadorOnline = value;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(entregadorOnline ? "Você está online na praça!" : "Você ficou offline.")),
-                  );
                 },
               ),
             ),
             SizedBox(height: 10),
 
-            // Ganhos do Dia / Extrato
+            // GANHOS DO DIA
             Card(
               child: ListTile(
                 leading: Icon(Icons.account_balance_wallet, color: Colors.green, size: 28),
                 title: Text("Meus Ganhos de Hoje", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Total faturado: R\$ ${ganhosHoje.toStringAsFixed(2)} (6 entregas)"),
+                subtitle: Text("Total faturado: R\$ ${ganhosHoje.toStringAsFixed(2)}"),
                 trailing: Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
                       title: Text("Extrato Detalhado"),
-                      content: Text("• Corrida #01: R\$ 12,00\n• Corrida #02: R\$ 15,00\n• Corrida #03: R\$ 10,00\n• Taxa de Gorjeta: R\$ 8,00\n\nTotal na Semana: R\$ 420,00"),
+                      content: Text("• Corridas finalizadas hoje\n• Gorjetas e taxas inclusas"),
                       actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("Fechar"))],
                     ),
                   );
@@ -660,89 +588,70 @@ class _EntregadorScreenState extends State<EntregadorScreen> {
               ),
             ),
 
-            // Avaliações e Reputação do Entregador
+            // REPUTAÇÃO
             Card(
               child: ListTile(
                 leading: Icon(Icons.star, color: Colors.amber, size: 28),
                 title: Text("Minha Reputação na Praça", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Nota Média: 4.9 ⭐ (Excelente Entregador)"),
-                trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text("Avaliações dos Clientes"),
-                      content: Text("• 'Muito educado e ágil!' (5⭐)\n• 'Chegou antes do prazo.' (5⭐)\n• 'Cuidado redobrado com o pedido.' (5⭐)"),
-                      actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text("OK"))],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Suporte / Emergência
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.support_agent, color: Colors.blue),
-                title: Text("Suporte para Entregadores", style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Problemas com endereço ou cliente ausente"),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Abrindo canal com o suporte..."), duration: Duration(seconds: 1)),
-                  );
-                },
+                subtitle: Text("Nota Média: 4.9 ⭐ (Excelente)"),
+                onTap: () {},
               ),
             ),
 
             Divider(height: 30),
-            Text("Entregas Disponíveis na Região:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+            Text("Entregas Liberadas pelas Lojas:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
 
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: entregasDisponiveis.length,
-              itemBuilder: (context, index) {
-                final entrega = entregasDisponiveis[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 6),
-                  child: ListTile(
-                    leading: Icon(Icons.motorcycle, color: Colors.orange, size: 30),
-                    title: Text(entrega["pedido"]!, style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("Rota: ${entrega["rota"]}\nTaxa: ${entrega["valor"]}"),
-                    isThreeLine: true,
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Botão GPS
-                        IconButton(
-                          icon: Icon(Icons.map, color: Colors.blue),
-                          tooltip: "Abrir Rota GPS",
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Abrindo GPS para rota ${entrega["rota"]}...")),
-                            );
-                          },
+            entregasProntasGlobais.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text("Nenhuma entrega disponível. Finalize um pedido no Cliente e aprove no Vendedor!"),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: entregasProntasGlobais.length,
+                    itemBuilder: (context, index) {
+                      final entrega = entregasProntasGlobais[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          leading: Icon(Icons.motorcycle, color: Colors.orange, size: 30),
+                          title: Text(entrega["pedido"]!, style: TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text("Rota: ${entrega["rota"]}\nTaxa: ${entrega["valor"]}"),
+                          isThreeLine: true,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.map, color: Colors.blue),
+                                tooltip: "Abrir Rota GPS",
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Abrindo GPS para rota...")),
+                                  );
+                                },
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                onPressed: () {
+                                  setState(() {
+                                    ganhosHoje += 12.00;
+                                    entregasProntasGlobais.removeAt(index);
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Corrida aceita! Dirija-se ao estabelecimento."), duration: Duration(seconds: 2)),
+                                  );
+                                },
+                                child: Text("Aceitar", style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                          onPressed: () {
-                            setState(() {
-                              ganhosHoje += 12.00;
-                              entregasDisponiveis.removeAt(index);
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Entrega aceita! Dirija-se à loja."), duration: Duration(seconds: 2)),
-                            );
-                          },
-                          child: Text("Aceitar", style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ],
         ),
       ),
